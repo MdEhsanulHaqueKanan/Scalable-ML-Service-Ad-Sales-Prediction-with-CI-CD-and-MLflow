@@ -4,146 +4,84 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-def load_and_standardize_columns(file_path: str) -> pd.DataFrame:
+def run_full_pipeline(df: pd.DataFrame, training_columns=None) -> pd.DataFrame:
     """
-    Loads data and standardizes all column names.
-    - Loads the data from a CSV file.
-    - Standardizes column names (lowercase, strips whitespace, replaces spaces with underscores).
-    
-    Args:
-        file_path (str): The path to the CSV file.
-        
-    Returns:
-        pd.DataFrame: The DataFrame with standardized column names.
+    Executes the entire data cleaning and feature engineering pipeline.
     """
-    df = pd.read_csv(file_path)
-    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
-    print("Step 1: Data loaded and column names standardized.")
-    return df
+    df_processed = df.copy()
 
-def clean_monetary_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Cleans monetary columns by removing currency symbols and converting to numeric type.
-    - Identifies columns to clean ('cost', 'sale_amount').
-    - Removes '$' and '₹' symbols.
-    - Converts columns to a numeric (float) data type. Errors are coerced to NaN.
-    
-    Args:
-        df (pd.DataFrame): The DataFrame to process.
-        
-    Returns:
-        pd.DataFrame: The DataFrame with cleaned monetary columns.
-    """
-    df_clean = df.copy()
-    cols_to_clean = ['cost', 'sale_amount']
-    
-    for col in cols_to_clean:
-        df_clean[col] = df_clean[col].astype(str).str.replace(r'[$,₹]', '', regex=True)
-        df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
-        
-    print("Step 2: Monetary columns ('cost', 'sale_amount') cleaned.")
-    return df_clean
+    # Step 1: Standardize Column Names
+    if any(' ' in col or col.lower() != col for col in df_processed.columns):
+        df_processed.columns = df_processed.columns.str.strip().str.lower().str.replace(' ', '_')
 
-def standardize_date_column(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Standardizes the 'ad_date' column to a consistent YYYY-MM-DD format.
-    - Converts the 'ad_date' column to datetime objects, handling multiple formats.
-    - Errors are coerced to NaT (Not a Time).
+    # Step 2: Clean Monetary Columns
+    for col in ['cost', 'sale_amount']:
+        if col in df_processed.columns:
+            df_processed[col] = df_processed[col].astype(str).str.replace(r'[$,₹]', '', regex=True)
+            df_processed[col] = pd.to_numeric(df_processed[col], errors='coerce')
     
-    Args:
-        df (pd.DataFrame): The DataFrame to process.
-        
-    Returns:
-        pd.DataFrame: The DataFrame with a standardized 'ad_date' column.
-    """
-    df_clean = df.copy()
-    df_clean['ad_date'] = pd.to_datetime(df_clean['ad_date'], format='mixed', errors='coerce')
-    print("Step 3: Date column ('ad_date') standardized.")
-    return df_clean
+    # Step 3: Standardize Date Column
+    if 'ad_date' in df_processed.columns:
+        df_processed['ad_date'] = pd.to_datetime(df_processed['ad_date'], format='mixed', errors='coerce')
 
-def clean_categorical_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Cleans and standardizes categorical columns.
-    - Converts specified columns to lowercase.
-    - Corrects known typos and consolidates variations.
-    
-    Args:
-        df (pd.DataFrame): The DataFrame to process.
-        
-    Returns:
-        pd.DataFrame: The DataFrame with cleaned categorical columns.
-    """
-    df_clean = df.copy()
-    
+    # Step 4: Clean Categorical Columns
     cols_to_lower = ['campaign_name', 'location', 'device', 'keyword']
     for col in cols_to_lower:
-        df_clean[col] = df_clean[col].str.lower()
-        
-    # Define mapping for corrections
+        if col in df_processed.columns:
+            df_processed[col] = df_processed[col].str.lower()
+    
     campaign_mapping = {
-        'data anlytics corse': 'data analytics course',
-        'data analytcis course': 'data analytics course',
-        'data analytics corse': 'data analytics course',
-        'dataanalyticscourse': 'data analytics course' # Added the final variation
+        'data anlytics corse': 'data analytics course', 'data analytcis course': 'data analytics course',
+        'data analytics corse': 'data analytics course', 'dataanalyticscourse': 'data analytics course'
     }
     location_mapping = { 'hyderbad': 'hyderabad', 'hydrebad': 'hyderabad' }
     keyword_mapping = {
-        'data analitics online': 'data analytics online',
-        'data anaytics training': 'data analytics training',
+        'data analitics online': 'data analytics online', 'data anaytics training': 'data analytics training',
         'online data analytic': 'online data analytics'
     }
-    
-    df_clean['campaign_name'] = df_clean['campaign_name'].replace(campaign_mapping)
-    df_clean['location'] = df_clean['location'].replace(location_mapping)
-    df_clean['keyword'] = df_clean['keyword'].replace(keyword_mapping)
-    
-    print("Step 4: Categorical columns cleaned and standardized.")
-    return df_clean
+    if 'campaign_name' in df_processed.columns:
+        df_processed['campaign_name'] = df_processed['campaign_name'].replace(campaign_mapping)
+    if 'location' in df_processed.columns:
+        df_processed['location'] = df_processed['location'].replace(location_mapping)
+    if 'keyword' in df_processed.columns:
+        df_processed['keyword'] = df_processed['keyword'].replace(keyword_mapping)
 
-def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Handles missing values in the dataset.
-    - Drops the 'conversion_rate' column due to excessive missing values.
-    - Fills missing values in key numerical columns with their respective medians.
-    
-    Args:
-        df (pd.DataFrame): The DataFrame to process.
-        
-    Returns:
-        pd.DataFrame: The DataFrame with missing values handled.
-    """
-    df_clean = df.copy()
-    
-    # Drop column with too many missing values
-    df_clean = df_clean.drop(columns=['conversion_rate'])
-    
-    # Columns to fill with median
+    # Step 5: Handle Missing Values
+    if 'conversion_rate' in df_processed.columns:
+        df_processed = df_processed.drop(columns=['conversion_rate'])
     cols_to_fill = ['clicks', 'impressions', 'cost', 'leads', 'conversions', 'sale_amount']
     for col in cols_to_fill:
-        median_val = df_clean[col].median()
-        df_clean[col] = df_clean[col].fillna(median_val)
-        
-    print("Step 5: Missing values handled.")
-    return df_clean
+        if col in df_processed.columns and df_processed[col].isnull().any():
+            df_processed[col] = df_processed[col].fillna(0)
 
-if __name__ == '__main__':
-    current_script_path = Path(__file__).resolve()
-    project_root = current_script_path.parent.parent
-    file_path = project_root / 'data' / 'GoogleAds_DataAnalytics_Sales_Uncleaned.csv'
+    # Step 6: Enforce Float Data Types (Before Engineering)
+    dtype_mapping = { 'clicks': 'float64', 'impressions': 'float64', 'cost': 'float64', 'leads': 'float64', 'conversions': 'float64' }
+    for col, dtype in dtype_mapping.items():
+        if col in df_processed.columns:
+            df_processed[col] = df_processed[col].astype(dtype)
     
-    # --- Execute the full pipeline ---
-    df1 = load_and_standardize_columns(file_path)
-    df2 = clean_monetary_columns(df1)
-    df3 = standardize_date_column(df2)
-    df4 = clean_categorical_columns(df3)
-    df_final = handle_missing_values(df4) # The final, fully cleaned DataFrame
-    
-    # --- Verify the final state ---
-    print("\n--- DataFrame Info After Final Cleaning ---")
-    df_final.info()
-    
-    print("\n--- Final Missing Value Counts ---")
-    print(df_final.isnull().sum())
-    
-    print("\n--- Final Value Counts for 'campaign_name' ---")
-    print(df_final['campaign_name'].value_counts())
+    # Step 7: Feature Engineering
+    if 'ad_date' in df_processed.columns and pd.api.types.is_datetime64_any_dtype(df_processed['ad_date']):
+        df_processed['day_of_week'] = df_processed['ad_date'].dt.dayofweek
+        df_processed['month'] = df_processed['ad_date'].dt.month
+        df_processed['day_of_month'] = df_processed['ad_date'].dt.day
+        df_processed = df_processed.drop(columns=['ad_date'])
+    if 'ad_id' in df_processed.columns:
+        df_processed = df_processed.drop(columns=['ad_id'])
+        
+    categorical_cols = ['campaign_name', 'location', 'device', 'keyword']
+    cols_to_encode = [col for col in categorical_cols if col in df_processed.columns]
+    if cols_to_encode:
+        # THE FIX: Explicitly set the dtype for one-hot encoding to bool
+        df_processed = pd.get_dummies(df_processed, columns=cols_to_encode, drop_first=True, dtype=bool)
+
+    # Step 8: Align Columns with Training Data
+    if training_columns:
+        # Use False as the fill_value for boolean columns
+        df_processed = df_processed.reindex(columns=training_columns, fill_value=False)
+        # Ensure all training columns are present and have the correct type
+        for col in training_columns:
+            if col not in df_processed.columns:
+                df_processed[col] = False # Add missing boolean columns
+        
+    return df_processed
