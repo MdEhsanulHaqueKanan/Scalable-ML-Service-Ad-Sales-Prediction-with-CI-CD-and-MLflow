@@ -1,0 +1,45 @@
+artifact_path: file:///G:/MdEhsanulHaqueKanan%20GitHub%20projects/Kaggle%20Machine%20Learning%20Projects/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/mlruns/758942090142518723/models/m-36516aac20f44033b3c4862b81dd110e/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.10.18
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.1
+is_signature_from_type_hint: false
+mlflow_version: 3.1.4
+model_id: m-36516aac20f44033b3c4862b81dd110e
+model_size_bytes: 3219222
+model_uuid: m-36516aac20f44033b3c4862b81dd110e
+prompts: null
+run_id: 1afc5ac32345429f8608f19ddeb793a9
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "double", "name": "clicks", "required": true}, {"type": "double",
+    "name": "impressions", "required": true}, {"type": "double", "name": "cost", "required":
+    true}, {"type": "double", "name": "leads", "required": true}, {"type": "double",
+    "name": "conversions", "required": true}, {"type": "integer", "name": "day_of_week",
+    "required": true}, {"type": "integer", "name": "month", "required": true}, {"type":
+    "integer", "name": "day_of_month", "required": true}, {"type": "boolean", "name":
+    "device_mobile", "required": true}, {"type": "boolean", "name": "device_tablet",
+    "required": true}, {"type": "boolean", "name": "keyword_data analytics course",
+    "required": true}, {"type": "boolean", "name": "keyword_data analytics online",
+    "required": true}, {"type": "boolean", "name": "keyword_data analytics training",
+    "required": true}, {"type": "boolean", "name": "keyword_learn data analytics",
+    "required": true}, {"type": "boolean", "name": "keyword_online data analytics",
+    "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-07-23 17:16:37.359180'

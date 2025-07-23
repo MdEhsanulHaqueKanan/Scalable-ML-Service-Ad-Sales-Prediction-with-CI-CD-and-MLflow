@@ -1,0 +1,22 @@
+artifact_path: file:///G:/MdEhsanulHaqueKanan%20GitHub%20projects/Kaggle%20Machine%20Learning%20Projects/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/mlruns/758942090142518723/models/m-60293a2474e44b49950c4fe0145a9905/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.10.18
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.1
+mlflow_version: 3.1.4
+model_id: m-60293a2474e44b49950c4fe0145a9905
+model_size_bytes: 3216724
+model_uuid: m-60293a2474e44b49950c4fe0145a9905
+prompts: null
+run_id: 093ad622198246b69dfbab187ec43dac
+utc_time_created: '2025-07-23 17:13:39.554434'
