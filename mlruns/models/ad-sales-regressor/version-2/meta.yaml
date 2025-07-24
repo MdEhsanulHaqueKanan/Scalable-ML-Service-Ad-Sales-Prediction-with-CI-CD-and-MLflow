@@ -1,9 +1,9 @@
 aliases: []
-creation_timestamp: 1753375996201
+creation_timestamp: 1753376320888
 current_stage: None
 deployment_job_state: null
 description: ''
-last_updated_timestamp: 1753375996201
+last_updated_timestamp: 1753376320888
 metrics: null
 model_id: m-ff0306c09c2a4f9eb6cc850f4fc7454a
 name: ad-sales-regressor
@@ -16,4 +16,4 @@ status_message: null
 storage_location: file:///G:/MdEhsanulHaqueKanan GitHub projects/Kaggle Machine Learning
   Projects/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/mlruns/699019578283156820/models/m-ff0306c09c2a4f9eb6cc850f4fc7454a/artifacts
 user_id: null
-version: 1
+version: 2

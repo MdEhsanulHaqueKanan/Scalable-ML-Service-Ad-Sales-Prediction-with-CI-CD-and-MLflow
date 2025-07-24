@@ -1,6 +1,7 @@
-artifact_location: file:///G:/MdEhsanulHaqueKanan%20GitHub%20projects/Kaggle%20Machine%20Learning%20Projects/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/mlruns/0
-creation_time: 1753330334421
+artifact_location: file:///G:/MdEhsanulHaqueKanan GitHub projects/Kaggle Machine Learning
+  Projects/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/mlruns/0
+creation_time: 1753375730542
 experiment_id: '0'
-last_update_time: 1753330334421
+last_update_time: 1753375730542
 lifecycle_stage: active
 name: Default

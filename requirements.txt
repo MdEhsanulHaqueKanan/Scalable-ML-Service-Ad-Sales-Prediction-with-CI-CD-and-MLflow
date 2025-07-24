@@ -4,4 +4,3 @@ scikit-learn
 mlflow
 Flask
 gunicorn
-mlflow-skinny

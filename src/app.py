@@ -1,7 +1,9 @@
+# G:\...\src\app.py
+
 import pandas as pd
 from flask import Flask, request, jsonify
-import mlflow
-from mlflow.tracking import MlflowClient # Import the modern client
+import joblib
+import json
 from pathlib import Path
 
 # Import the master pipeline function
@@ -10,31 +12,17 @@ from .data_processing import run_full_pipeline
 # Initialize the Flask application
 app = Flask(__name__)
 
-# --- 1. Load Model from Model Registry (The ULTIMATE Production Way) ---
-# By not setting a tracking_uri, MLflow will default to the correct relative path
-client = MlflowClient()
+# --- 1. Load Production Artifacts ---
+# Define paths relative to the current script
+base_dir = Path(__file__).resolve().parent.parent
+model_path = base_dir / 'model' / 'model.joblib'
+columns_path = base_dir / 'model' / 'columns.json'
 
-# Define the model name and the alias we want to load
-model_name = "ad-sales-regressor"
-model_alias = "production"
-
-# Use the client to get the specific version URI for the alias
-# This is the most robust way to load a model
-model_version_details = client.get_model_version_by_alias(name=model_name, alias=model_alias)
-model_uri = model_version_details.source
-
-# Load the production model using its direct source URI
-model = mlflow.pyfunc.load_model(model_uri)
-
-# Load the training columns from the model's signature
-TRAINING_COLUMNS = model.metadata.get_input_schema().input_names()
-
-print(f"--- Model Loaded Successfully ---")
-print(f"Model Name: {model_name}")
-print(f"Version: {model_version_details.version}")
-print(f"Alias: {model_alias}")
-print("---------------------------------")
-
+# Load the model and the training columns
+model = joblib.load(model_path)
+with open(columns_path, 'r') as f:
+    TRAINING_COLUMNS = json.load(f)
+print("--- Model and training columns loaded successfully from local files ---")
 
 # --- 2. Define the Prediction Endpoint ---
 @app.route("/predict", methods=['POST'])
