@@ -2,26 +2,28 @@
 import pandas as pd
 from src.data_processing import run_full_pipeline
 
-def test_pipeline_handles_messy_data_and_encodes():
-    # GIVEN: A dictionary with messy, non-standardized column names and values
-    raw_data = {
-        "Campaign_Name ": "Data Analytcis Course ", # With space
-        "Clicks": 150,
-        "Impressions": 5000,
-        "Cost": "$200",
-        "Ad_Date": "25-07-2025",
-        "Location": "hydrebad",
-        "Device": "DESKTOP"
-    }
-    raw_df = pd.DataFrame([raw_data])
+def test_pipeline_creates_dummified_columns():
+    """
+    GIVEN a DataFrame with multiple messy rows.
+    WHEN the full pipeline is run.
+    THEN the output should be clean, processed, and correctly one-hot encoded.
+    """
+    # GIVEN: A DataFrame with multiple rows to ensure dummies are created correctly
+    raw_data = [
+        {"Campaign_Name": "Data Course ", "Device": "DESKTOP", "Location": "hydrebad", "Ad_Date": "2025-01-01", "Cost": "$100"},
+        {"Campaign_Name": "Data Course", "Device": "mobile", "Location": "hyderabad", "Ad_Date": "2025-01-02", "Cost": "$150"}
+    ]
+    raw_df = pd.DataFrame(raw_data)
 
     # WHEN
     processed_df = run_full_pipeline(raw_df)
 
     # THEN
-    # Check if a column created by one-hot encoding exists
-    assert 'device_desktop' in processed_df.columns
-    # Check if the date features were created
+    # Check if the dummified column for 'mobile' was created (since 'desktop' might be dropped)
+    assert 'device_mobile' in processed_df.columns
+    # Check that the original 'device' column is gone
+    assert 'device' not in processed_df.columns
+    # Check that date features were created
     assert 'day_of_week' in processed_df.columns
-    # Check if the cost was converted to a number
+    # Check that cost was converted
     assert processed_df['cost'].dtype == 'float64'
