@@ -1,82 +1,59 @@
+# G:\...\src\data_processing.py
 import pandas as pd
-import numpy as np
-from pathlib import Path
 
 def run_full_pipeline(df: pd.DataFrame, training_columns=None) -> pd.DataFrame:
-    """
-    Executes the entire data cleaning and feature engineering pipeline.
-    This is the master function that will be used by both the training script and the API.
-    """
-    df_processed = df.copy()
+    df.columns = [col.strip().lower().replace(' ', '_') for col in df.columns]
 
-    # --- Step 1: Standardize Column Names (ALWAYS RUN THIS - THE DEFINITIVE FIX) ---
-    df_processed.columns = df_processed.columns.str.strip().str.lower().str.replace(' ', '_')
-
-    # --- Step 2: Clean Monetary Columns ---
+    # Monetary
     for col in ['cost', 'sale_amount']:
-        if col in df_processed.columns:
-            df_processed[col] = df_processed[col].astype(str).str.replace(r'[$,₹]', '', regex=True)
-            df_processed[col] = pd.to_numeric(df_processed[col], errors='coerce')
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.replace(r'[$,₹]', '', regex=True)
+            df[col] = pd.to_numeric(df[col], errors='coerce')
     
-    # --- Step 3: Standardize Date Column ---
-    if 'ad_date' in df_processed.columns:
-        df_processed['ad_date'] = pd.to_datetime(df_processed['ad_date'], format='mixed', errors='coerce')
+    # Date
+    if 'ad_date' in df.columns:
+        df['ad_date'] = pd.to_datetime(df['ad_date'], format='mixed', errors='coerce')
+        df['day_of_week'] = df['ad_date'].dt.dayofweek
+        df['month'] = df['ad_date'].dt.month
+        df['day_of_month'] = df['ad_date'].dt.day
+        df = df.drop(columns=['ad_date'])
 
-    # --- Step 4: Clean Categorical Columns ---
-    cols_to_lower = ['campaign_name', 'location', 'device', 'keyword']
-    for col in cols_to_lower:
-        if col in df_processed.columns:
-            df_processed[col] = df_processed[col].str.lower()
+    # Categorical Cleaning
+    cat_cols = ['campaign_name', 'location', 'device', 'keyword']
+    for col in cat_cols:
+        if col in df.columns:
+            df[col] = df[col].str.lower()
+
+    # Mappings
+    if 'campaign_name' in df.columns:
+        df['campaign_name'] = df['campaign_name'].str.replace(r'\s+', ' ', regex=True).str.replace('corse', 'course').str.replace('anlytics', 'analytics').str.replace('analytcis', 'analytics')
+    if 'location' in df.columns:
+        df['location'] = df['location'].str.replace('hyderbad', 'hyderabad').str.replace('hydrebad', 'hyderabad')
+    if 'keyword' in df.columns:
+        df['keyword'] = df['keyword'].str.replace('analitics', 'analytics').str.replace('anaytics', 'analytics').str.replace('analytic', 'analytics')
+
+    # Missing Values
+    if 'conversion_rate' in df.columns:
+        df = df.drop(columns=['conversion_rate'])
     
-    campaign_mapping = {
-        'data anlytics corse': 'data analytics course', 'data analytcis course': 'data analytics course',
-        'data analytics corse': 'data analytics course', 'dataanalyticscourse': 'data analytics course'
-    }
-    location_mapping = { 'hyderbad': 'hyderabad', 'hydrebad': 'hyderabad' }
-    keyword_mapping = {
-        'data analitics online': 'data analytics online', 'data anaytics training': 'data analytics training',
-        'online data analytic': 'online data analytics'
-    }
-    if 'campaign_name' in df_processed.columns:
-        df_processed['campaign_name'] = df_processed['campaign_name'].replace(campaign_mapping)
-    if 'location' in df_processed.columns:
-        df_processed['location'] = df_processed['location'].replace(location_mapping)
-    if 'keyword' in df_processed.columns:
-        df_processed['keyword'] = df_processed['keyword'].replace(keyword_mapping)
+    for col in df.columns:
+        if df[col].isnull().any():
+            if df[col].dtype in ['float64', 'int64']:
+                df[col] = df[col].fillna(df[col].median())
 
-    # --- Step 5: Handle Missing Values ---
-    if 'conversion_rate' in df_processed.columns:
-        df_processed = df_processed.drop(columns=['conversion_rate'])
-    cols_to_fill = ['clicks', 'impressions', 'cost', 'leads', 'conversions', 'sale_amount']
-    for col in cols_to_fill:
-        if col in df_processed.columns and df_processed[col].isnull().any():
-            df_processed[col] = df_processed[col].fillna(0)
-
-    # --- Step 6: Enforce Float Data Types ---
-    dtype_mapping = { 'clicks': 'float64', 'impressions': 'float64', 'cost': 'float64', 'leads': 'float64', 'conversions': 'float64' }
-    for col, dtype in dtype_mapping.items():
-        if col in df_processed.columns:
-            df_processed[col] = df_processed[col].astype(dtype)
-    
-    # --- Step 7: Feature Engineering ---
-    if 'ad_date' in df_processed.columns and pd.api.types.is_datetime64_any_dtype(df_processed['ad_date']):
-        df_processed['day_of_week'] = df_processed['ad_date'].dt.dayofweek
-        df_processed['month'] = df_processed['ad_date'].dt.month
-        df_processed['day_of_month'] = df_processed['ad_date'].dt.day
-        df_processed = df_processed.drop(columns=['ad_date'])
-    if 'ad_id' in df_processed.columns:
-        df_processed = df_processed.drop(columns=['ad_id'])
-        
-    categorical_cols = ['campaign_name', 'location', 'device', 'keyword']
-    cols_to_encode = [col for col in categorical_cols if col in df_processed.columns]
+    # One-hot encoding
+    cols_to_encode = [col for col in cat_cols if col in df.columns]
     if cols_to_encode:
-        df_processed = pd.get_dummies(df_processed, columns=cols_to_encode, drop_first=True, dtype=bool)
+        df = pd.get_dummies(df, columns=cols_to_encode, drop_first=True, dtype=bool)
 
-    # --- Step 8: Align Columns with Training Data ---
+    # Align columns
     if training_columns:
-        df_processed = df_processed.reindex(columns=training_columns, fill_value=False)
+        df = df.reindex(columns=training_columns, fill_value=False)
         for col in training_columns:
-            if col not in df_processed.columns:
-                df_processed[col] = False
-                
-    return df_processed
+            if col not in df.columns:
+                df[col] = False
+    
+    if 'ad_id' in df.columns:
+        df = df.drop(columns=['ad_id'])
+        
+    return df
