@@ -23,7 +23,7 @@ The primary goal of this project is to showcase enterprise-level MLOps best prac
 
 The diagram below illustrates the complete CI/CD and MLOps workflow for this project.
 
-![Architecture Diagram](./assets/architecture_diagram.png)
+![Architecture Diagram](./assets/architecture_diagram_resized.png)
 
 ---
 
