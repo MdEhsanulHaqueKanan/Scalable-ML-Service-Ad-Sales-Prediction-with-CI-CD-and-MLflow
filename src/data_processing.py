@@ -5,14 +5,14 @@ from pathlib import Path
 def run_full_pipeline(df: pd.DataFrame, training_columns=None) -> pd.DataFrame:
     """
     Executes the entire data cleaning and feature engineering pipeline.
+    This is the master function that will be used by both the training script and the API.
     """
     df_processed = df.copy()
 
-    # --- Step 1: Standardize Column Names (ALWAYS RUN THIS) ---
+    # --- Step 1: Standardize Column Names (ALWAYS RUN THIS - THE DEFINITIVE FIX) ---
     df_processed.columns = df_processed.columns.str.strip().str.lower().str.replace(' ', '_')
 
     # --- Step 2: Clean Monetary Columns ---
-    # ... (rest of the file is exactly the same as the last version I gave you)
     for col in ['cost', 'sale_amount']:
         if col in df_processed.columns:
             df_processed[col] = df_processed[col].astype(str).str.replace(r'[$,₹]', '', regex=True)
