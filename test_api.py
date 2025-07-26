@@ -1,11 +1,13 @@
+# G:\...\test_api.py
+
 import requests
 import json
 
-# URL of our running Flask API
+# The URL of our running Docker container's API
 url = 'http://127.0.0.1:5001/predict'
 
-# Sample data to send. The keys must match the column names from the *original* raw data.
-# We will build a more realistic sample later.
+# A sample of raw, uncleaned data, just like a real client would send.
+# The keys must match the original CSV column names.
 sample_data = {
     "Campaign_Name": "Data Analytics Course",
     "Clicks": 150,
@@ -13,15 +15,19 @@ sample_data = {
     "Cost": "$200",
     "Leads": 20,
     "Conversions": 10,
-    "Ad_Date": "2024-11-25",
+    "Ad_Date": "2025-07-24",
     "Location": "hyderabad",
     "Device": "desktop",
     "Keyword": "data analytics course"
 }
 
-# Send the POST request
+print("--- Sending request to the API ---")
+print("Data:", json.dumps(sample_data, indent=2))
+
+# Send the POST request with the JSON data
 response = requests.post(url, json=sample_data)
 
-# Print the results
+# Print the results from the API
+print("\n--- Received response from the API ---")
 print(f"Status Code: {response.status_code}")
 print(f"Response JSON: {response.json()}")
