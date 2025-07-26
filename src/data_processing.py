@@ -2,58 +2,48 @@
 import pandas as pd
 
 def run_full_pipeline(df: pd.DataFrame, training_columns=None) -> pd.DataFrame:
-    df.columns = [col.strip().lower().replace(' ', '_') for col in df.columns]
+    # Make a copy to avoid side effects
+    df_processed = df.copy()
 
-    # Monetary
+    # Standardize column names
+    df_processed.columns = [col.strip().lower().replace(' ', '_') for col in df_processed.columns]
+
+    # Clean and convert monetary columns
     for col in ['cost', 'sale_amount']:
-        if col in df.columns:
-            df[col] = df[col].astype(str).str.replace(r'[$,₹]', '', regex=True)
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-    
-    # Date
-    if 'ad_date' in df.columns:
-        df['ad_date'] = pd.to_datetime(df['ad_date'], format='mixed', errors='coerce')
-        df['day_of_week'] = df['ad_date'].dt.dayofweek
-        df['month'] = df['ad_date'].dt.month
-        df['day_of_month'] = df['ad_date'].dt.day
-        df = df.drop(columns=['ad_date'])
+        if col in df_processed.columns:
+            df_processed[col] = pd.to_numeric(df_processed[col].astype(str).str.replace(r'[$,₹]', '', regex=True), errors='coerce')
 
-    # Categorical Cleaning
-    cat_cols = ['campaign_name', 'location', 'device', 'keyword']
-    for col in cat_cols:
-        if col in df.columns:
-            df[col] = df[col].str.lower()
+    # Handle dates and create date features
+    if 'ad_date' in df_processed.columns:
+        df_processed['ad_date'] = pd.to_datetime(df_processed['ad_date'], format='mixed', errors='coerce')
+        df_processed['day_of_week'] = df_processed['ad_date'].dt.dayofweek
+        df_processed['month'] = df_processed['ad_date'].dt.month
+        df_processed['day_of_month'] = df_processed['ad_date'].dt.day
+        df_processed = df_processed.drop(columns=['ad_date'])
 
-    # Mappings
-    if 'campaign_name' in df.columns:
-        df['campaign_name'] = df['campaign_name'].str.replace(r'\s+', ' ', regex=True).str.replace('corse', 'course').str.replace('anlytics', 'analytics').str.replace('analytcis', 'analytics')
-    if 'location' in df.columns:
-        df['location'] = df['location'].str.replace('hyderbad', 'hyderabad').str.replace('hydrebad', 'hyderabad')
-    if 'keyword' in df.columns:
-        df['keyword'] = df['keyword'].str.replace('analitics', 'analytics').str.replace('anaytics', 'analytics').str.replace('analytic', 'analytics')
+    # Clean categorical text data
+    for col in ['campaign_name', 'location', 'device', 'keyword']:
+        if col in df_processed.columns:
+            df_processed[col] = df_processed[col].str.lower()
+            if col == 'location':
+                df_processed[col] = df_processed[col].replace({'hydrebad': 'hyderabad', 'hyderbad': 'hyderabad'})
 
-    # Missing Values
-    if 'conversion_rate' in df.columns:
-        df = df.drop(columns=['conversion_rate'])
-    
-    for col in df.columns:
-        if df[col].isnull().any():
-            if df[col].dtype in ['float64', 'int64']:
-                df[col] = df[col].fillna(df[col].median())
-
-    # One-hot encoding
-    cols_to_encode = [col for col in cat_cols if col in df.columns]
+    # One-hot encode the categorical columns that exist
+    cols_to_encode = [col for col in ['campaign_name', 'location', 'device', 'keyword'] if col in df_processed.columns]
     if cols_to_encode:
-        df = pd.get_dummies(df, columns=cols_to_encode, drop_first=True, dtype=bool)
+        df_processed = pd.get_dummies(df_processed, columns=cols_to_encode, drop_first=True, dtype=bool)
 
-    # Align columns
-    if training_columns:
-        df = df.reindex(columns=training_columns, fill_value=False)
-        for col in training_columns:
-            if col not in df.columns:
-                df[col] = False
-    
-    if 'ad_id' in df.columns:
-        df = df.drop(columns=['ad_id'])
+    # Drop identifier and any leftover columns we don't need
+    if 'ad_id' in df_processed.columns:
+        df_processed = df_processed.drop(columns=['ad_id'])
+    if 'conversion_rate' in df_processed.columns:
+        df_processed = df_processed.drop(columns=['conversion_rate'])
         
-    return df
+    # Align with training columns if provided
+    if training_columns:
+        for col in training_columns:
+            if col not in df_processed.columns:
+                df_processed[col] = False  # Add missing columns as False
+        df_processed = df_processed[training_columns] # Ensure exact order and columns
+
+    return df_processed
