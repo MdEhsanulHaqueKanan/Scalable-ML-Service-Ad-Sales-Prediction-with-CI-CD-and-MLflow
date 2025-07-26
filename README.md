@@ -19,7 +19,7 @@ The project features a clean, interactive user interface built with Flask and st
 *   **End-to-End Data Pipeline:** A robust data cleaning and feature engineering pipeline built with Pandas to handle messy, inconsistent real-world data.
 *   **Experiment Tracking & Model Registry:** Uses **MLflow** to log model parameters, metrics (RMSE, R²), and manage the model lifecycle by promoting validated versions to "Production".
 *   **Interactive Frontend:** A user-friendly web interface built with **Flask**, HTML, and vanilla JavaScript that allows for real-time predictions.
-*   **Containerized & Production-Ready:** The entire application is containerized with **Docker** and served by a Gunicorn WSGI server for maximum portability and scalability.
+* **Containerized, Scalable & Production-Ready:** The entire application is containerized with **Docker** and served by a Gunicorn WSGI server. Its **stateless design** ensures **horizontal scalability**, allowing multiple instances to handle high concurrent request volumes efficiently, offering maximum portability and readiness for production deployment.
 *   **Automated CI/CD Pipeline:** A full Continuous Integration pipeline using **GitHub Actions** that automatically:
     1.  Runs **Pytest** unit tests on every push to `main`.
     2.  Builds the Docker image if tests pass.
