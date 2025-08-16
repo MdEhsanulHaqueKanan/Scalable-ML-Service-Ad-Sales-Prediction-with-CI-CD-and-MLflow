@@ -1,41 +1,37 @@
 # Scalable ML Service: Ad Sales Prediction with CI/CD & MLflow
 
-This repository contains a complete, production-ready MLOps pipeline for a machine learning prediction service. The project demonstrates the entire lifecycle of an ML system: from cleaning messy, real-world data to training and tracking a model, containerizing the prediction API, and automating the entire process with a CI/CD pipeline.
+This repository contains the complete, production-ready MLOps backend for a machine learning prediction service. The project demonstrates the entire lifecycle of an ML system: from cleaning messy, real-world data to training a model, containerizing the API, and automating the testing and build process with a CI/CD pipeline.
 
-The primary goal of this project is to showcase enterprise-level MLOps best practices, including automated testing, version control, experiment tracking, and automated deployment.
+This backend serves a decoupled, modern React/TypeScript frontend hosted on Vercel.
 
 ---
 
-## ✨ Live Demo
+**[➡️ Live Frontend Demo on Vercel](https://ad-sales-predictor-frontend.vercel.app/)** | **[📂 Frontend Source Code](https://github.com/MdEhsanulHaqueKanan/ad-sales-predictor-frontend)**
 
-**[➡️ Live Demo on Render](https://ad-sales-predictor.onrender.com)**
+*(Note: The backend server on Render's free tier may take up to a minute to "wake up" on the first visit.)*
 
-*(Note: The server is on a free tier and may take up to a minute to "wake up" on the first visit.)*
+---
 
 ## ✨ Demo Screenshot
-
-The project features a clean, interactive user interface built with Flask and styled with Pico.css.
-
-![Demo Screenshot](./assets/app_sc1.png)
+![Demo Screenshot](./assets/ad_sales_predictor.png)
 
 ---
 
 ## 🚀 Key Features
 
-*   **End-to-End Data Pipeline:** A robust data cleaning and feature engineering pipeline built with Pandas to handle messy, inconsistent real-world data.
-*   **Experiment Tracking & Model Registry:** Uses **MLflow** to log model parameters, metrics (RMSE, R²), and manage the model lifecycle by promoting validated versions to "Production".
-*   **Interactive Frontend:** A user-friendly web interface built with **Flask**, HTML, and vanilla JavaScript that allows for real-time predictions.
-* **Containerized, Scalable & Production-Ready:** The entire application is containerized with **Docker** and served by a Gunicorn WSGI server. Its **stateless design** ensures **horizontal scalability**, allowing multiple instances to handle high concurrent request volumes efficiently, offering maximum portability and readiness for production deployment.
+*   **Headless API Backend:** A pure prediction API built with **Flask** and served by a production-ready **Gunicorn** WSGI server.
+*   **Containerized & Scalable:** The entire application is containerized with **Docker**. Its **stateless design** ensures horizontal scalability.
 *   **Automated CI/CD Pipeline:** A full Continuous Integration pipeline using **GitHub Actions** that automatically:
     1.  Runs **Pytest** unit tests on every push to `main`.
     2.  Builds the Docker image if tests pass.
     3.  Pushes the validated image to **Docker Hub**.
+*   **Robust Data Processing:** The service includes a complete data cleaning and feature engineering pipeline using a scikit-learn compatible transformer, packaged into a single `joblib` artifact.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Full-Stack Architecture
 
-The diagram below illustrates the complete CI/CD and MLOps workflow for this project.
+This backend is part of a decoupled, full-stack application. The complete MLOps and deployment workflow is illustrated below.
 
 ![Architecture Diagram](./assets/architecture_diagram_resized.png)
 
@@ -43,17 +39,16 @@ The diagram below illustrates the complete CI/CD and MLOps workflow for this pro
 
 ## 🛠️ Tech Stack
 
-*   **ML & Data Science:** Python, Pandas, Scikit-learn
-*   **MLOps & Experiment Tracking:** MLflow
-*   **Backend & API:** Flask, Gunicorn
-*   **Frontend:** HTML, CSS, JavaScript
+*   **ML & Data Science:** Python, Pandas, Scikit-learn, Joblib
+*   **Backend & API:** Flask, Gunicorn, Flask-Cors
 *   **Containerization:** Docker
 *   **CI/CD & Automation:** GitHub Actions, Pytest
 *   **Container Registry:** Docker Hub
+*   **Deployment:** Render
 
 ---
 
-## 🏁 Getting Started
+## 🏁 Getting Started Locally
 
 ### Prerequisites
 *   Git
@@ -70,41 +65,38 @@ cd Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow
 You can run the application using the pre-built image from Docker Hub.
 
 **On Windows (Command Prompt):**
-This command mounts your local mlruns folder into the container to load the model.
-
 ```bash
 docker pull mdehsanulhaquekanan/scalable-ml-service:latest
-docker run -p 5001:5001 -v "%cd%\mlruns:/app/mlruns" mdehsanulhaquekanan/scalable-ml-service
+docker run -p 5001:5001 mdehsanulhaquekanan/scalable-ml-service
 ```
 
 **On macOS / Linux:**
 ```bash
 docker pull mdehsanulhaquekanan/scalable-ml-service:latest
-docker run -p 5001:5001 -v "$(pwd)/mlruns:/app/mlruns" mdehsanulhaquekanan/scalable-ml-service
+docker run -p 5001:5001 mdehsanulhaquekanan/scalable-ml-service
 ```
 ### 3. Access the Application
-Once the container is running, open your web browser and navigate to:
+Once the container is running, open your web browser and navigate to http://127.0.0.1:5001. You should see: 
 ```bash
-http://127.0.0.1:5001
+{"status":"API is running"}.
 ```
 
-## 🧪 Testing the Service
-### Unit Tests
+---
 
-The project includes a suite of unit tests for the data processing pipeline. You can run these locally using `pytest`:
 
-```bash
-pytest   
-```
+## 🧪 Testing the API
+With the container running, you can send a POST request to the /predict endpoint using a simple Python script.
 
-### API Test
-With the container running, you can send a `POST` request to the prediction endpoint. Create a file named `test_api.py` with the following content and run python `test_api.py`.
 ```bash
 # test_api.py
 import requests
 import json
 
-url = 'http://127.0.0.1:5001/predict'
+# For local testing
+# url = 'http://127.0.0.1:5001/predict'
+
+# For testing the live Render deployment
+url = 'https://scalable-ad-sales-predictor.onrender.com/predict'
 
 sample_data = {
     "Campaign_Name": "Data Analytics Course", "Clicks": 150,
@@ -116,25 +108,17 @@ sample_data = {
 response = requests.post(url, json=sample_data)
 
 print(f"Status Code: {response.status_code}")
-print(f"Response JSON: {response.json()}")
+print(f"Response JSON: {response.json()}")  
 ```
-**Expected Response in JSON:**
-
-```bash
-{
-  "sale_amount_prediction": 1376.11 
-}
-```
-
-
+ 
 ---
 
 ## 🤖 CI/CD Pipeline
 
-The CI/CD pipeline is defined in `.github/workflows/ci-cd.yml` and is triggered on every push to the `main` branch. It ensures that only tested and validated code is deployed as a new Docker image.
+The CI/CD pipeline ensures that only tested and validated code is published as a new Docker image to Docker Hub.
 
 **Pipeline Status:**  
-![CI/CD Pipeline](https://github.com/MdEhsanulHaqueKanan/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/actions/workflows/ci-cd.yml/badge.svg)
+![alt text](https://github.com/MdEhsanulHaqueKanan/Scalable-ML-Service-Ad-Sales-Prediction-with-CI-CD-and-MLflow/actions/workflows/ci-cd.yml/badge.svg)
 
 ---
 Developed by Md. Ehsanul Haque Kanan
