@@ -1,5 +1,6 @@
 # /api/requirements.txt
 flask
 pandas
-scikit-learn
+numpy
 mlflow-skinny
+# We are INTENTIONALLY leaving out scikit-learn
