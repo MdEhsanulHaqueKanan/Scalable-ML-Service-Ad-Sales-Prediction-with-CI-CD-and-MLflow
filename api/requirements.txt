@@ -1,6 +1,0 @@
-# /api/requirements.txt
-flask
-pandas
-numpy
-scikit-learn==1.7.1
-# joblib is included with scikit-learn
