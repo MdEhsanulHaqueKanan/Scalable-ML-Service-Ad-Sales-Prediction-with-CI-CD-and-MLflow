@@ -6,6 +6,12 @@ The primary goal of this project is to showcase enterprise-level MLOps best prac
 
 ---
 
+## ✨ Live Demo
+
+**[➡️ Live Demo on Render](https://ad-sales-predictor.onrender.com)**
+
+*(Note: The server is on a free tier and may take up to a minute to "wake up" on the first visit.)*
+
 ## ✨ Demo Screenshot
 
 The project features a clean, interactive user interface built with Flask and styled with Pico.css.
