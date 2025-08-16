@@ -1,33 +1,37 @@
 # /api/predict.py
 import pandas as pd
 from flask import Flask, request, jsonify
-import mlflow.pyfunc
+import joblib
 from pathlib import Path
-import sys
-
-# Add the project root to the Python path so we can import 'src'
-project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
-
-from src.data_processing import run_full_pipeline
 
 app = Flask(__name__)
 
-# Load the model from the local /model directory
-model_path = project_root / 'model' / 'random_forest_model'
-model = mlflow.pyfunc.load_model(model_path)
-TRAINING_COLUMNS = model.metadata.get_input_schema().input_names()
-print("--- Model Loaded Successfully ---")
+# --- Load the entire pipeline object from the single .joblib file ---
+# This path is relative to the project root, which Vercel understands
+pipeline_path = Path(__file__).resolve().parent.parent / 'model' / 'pipeline.joblib'
+pipeline = joblib.load(pipeline_path)
+print("--- Full prediction pipeline loaded successfully ---")
 
-# This is the function Vercel will run
+# Vercel automatically routes requests to /api/predict to this file.
+# The Flask app object is used by Vercel's Python WSGI server.
+# We only need to define the endpoint we care about.
 @app.route('/api/predict', methods=['POST'])
 def predict_handler():
+    """Handles prediction requests by running the full pipeline."""
     try:
+        # Get raw JSON data
         data = request.get_json(force=True)
+        # Convert to DataFrame. Note: Column names must match the original raw data.
         raw_df = pd.DataFrame([data])
-        processed_df = run_full_pipeline(raw_df, training_columns=TRAINING_COLUMNS)
-        prediction = model.predict(processed_df)
+        
+        # The pipeline handles EVERYTHING: cleaning, feature engineering, and prediction
+        prediction = pipeline.predict(raw_df)
+        
+        # The output of a scikit-learn regressor is a numpy array, get the first element
         output = prediction[0]
+        
         return jsonify({'sale_amount_prediction': round(output, 2)})
+        
     except Exception as e:
+        # Provide a detailed error for debugging
         return jsonify({'error': str(e), 'type': type(e).__name__}), 500
