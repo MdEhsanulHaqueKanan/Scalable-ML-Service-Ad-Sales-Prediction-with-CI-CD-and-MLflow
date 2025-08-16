@@ -3,4 +3,5 @@ flask
 pandas
 numpy
 mlflow-skinny
+joblib
 # We are INTENTIONALLY leaving out scikit-learn
