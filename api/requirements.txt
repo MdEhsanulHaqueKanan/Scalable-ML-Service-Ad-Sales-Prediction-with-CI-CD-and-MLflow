@@ -1,0 +1,5 @@
+# /api/requirements.txt
+flask
+pandas
+scikit-learn
+mlflow-skinny
